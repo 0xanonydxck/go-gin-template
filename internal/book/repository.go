@@ -26,7 +26,7 @@ func NewRepository(db *gorm.DB) *repository {
 }
 
 func (r *repository) Create(ctx context.Context, book *model.Book) error {
-	if err := r.db.Create(book).Error; err != nil {
+	if err := r.db.WithContext(ctx).Create(book).Error; err != nil {
 		return errs.FromGorm(err)
 	}
 
@@ -35,7 +35,7 @@ func (r *repository) Create(ctx context.Context, book *model.Book) error {
 
 func (r *repository) GetAll(ctx context.Context) ([]model.Book, error) {
 	var books []model.Book
-	if err := r.db.Preload("Genre").Preload("Tags").Find(&books).Error; err != nil {
+	if err := r.db.WithContext(ctx).Preload("Genre").Preload("Tags").Find(&books).Error; err != nil {
 		return nil, errs.FromGorm(err)
 	}
 
@@ -44,7 +44,7 @@ func (r *repository) GetAll(ctx context.Context) ([]model.Book, error) {
 
 func (r *repository) GetByID(ctx context.Context, id uuid.UUID) (*model.Book, error) {
 	var book model.Book
-	if err := r.db.Preload("Genre").Preload("Tags").Where("id = ?", id).First(&book).Error; err != nil {
+	if err := r.db.WithContext(ctx).Preload("Genre").Preload("Tags").Where("id = ?", id).First(&book).Error; err != nil {
 		return nil, errs.FromGorm(err)
 	}
 
@@ -52,7 +52,7 @@ func (r *repository) GetByID(ctx context.Context, id uuid.UUID) (*model.Book, er
 }
 
 func (r *repository) Update(ctx context.Context, book *model.Book) error {
-	if err := r.db.Save(book).Error; err != nil {
+	if err := r.db.WithContext(ctx).Save(book).Error; err != nil {
 		return errs.FromGorm(err)
 	}
 
@@ -60,7 +60,7 @@ func (r *repository) Update(ctx context.Context, book *model.Book) error {
 }
 
 func (r *repository) Delete(ctx context.Context, id uuid.UUID) error {
-	if err := r.db.Unscoped().Delete(&model.Book{}, "id = ?", id).Error; err != nil {
+	if err := r.db.WithContext(ctx).Unscoped().Delete(&model.Book{}, "id = ?", id).Error; err != nil {
 		return errs.FromGorm(err)
 	}
 

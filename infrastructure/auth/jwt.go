@@ -153,6 +153,9 @@ func ExtractTokenMetadata(r *http.Request) (*AccessProperties, error) {
 	if err != nil {
 		return nil, err
 	}
+	if !token.Valid {
+		return nil, fmt.Errorf("invalid token")
+	}
 
 	acc, err := Extract(token)
 	if err != nil {

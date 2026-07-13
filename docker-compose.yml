@@ -13,6 +13,7 @@ services:
     depends_on:
       - postgres-1
       - redis
+      - jaeger
     networks:
       - bookstore-network
     restart: unless-stopped
@@ -36,6 +37,19 @@ services:
     command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
     volumes:
       - redisdata:/data
+    restart: unless-stopped
+    networks:
+      - bookstore-network
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: backend-jaeger
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+      - "4318:4318"
     restart: unless-stopped
     networks:
       - bookstore-network

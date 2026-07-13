@@ -23,6 +23,13 @@ var (
 	MODE       Mode
 	PORT       int
 	LIMIT_RATE string
+	LOG_LEVEL  string
+
+	OTEL_ENABLED                bool
+	OTEL_SERVICE_NAME           string
+	OTEL_ENVIRONMENT            string
+	OTEL_EXPORTER_OTLP_ENDPOINT string
+	OTEL_SAMPLE_RATIO           float64
 
 	CORS_ALLOWED_ORIGINS string
 	CORS_ALLOWED_METHODS string
@@ -49,6 +56,13 @@ func Init() {
 	MODE = ModeEnv("MODE")
 	LIMIT_RATE = StringEnv("LIMIT_RATE")
 	PORT = IntEnv("PORT")
+	LOG_LEVEL = StringEnvDefault("LOG_LEVEL", "info")
+
+	OTEL_ENABLED = BoolEnvDefault("OTEL_ENABLED", false)
+	OTEL_SERVICE_NAME = StringEnvDefault("OTEL_SERVICE_NAME", "simple-bookstore")
+	OTEL_ENVIRONMENT = StringEnvDefault("OTEL_ENVIRONMENT", MODE.String())
+	OTEL_EXPORTER_OTLP_ENDPOINT = StringEnvDefault("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317")
+	OTEL_SAMPLE_RATIO = FloatEnvDefault("OTEL_SAMPLE_RATIO", 1)
 
 	CORS_ALLOWED_ORIGINS = StringEnv("CORS_ALLOWED_ORIGINS")
 	CORS_ALLOWED_METHODS = StringEnv("CORS_ALLOWED_METHODS")
@@ -93,4 +107,38 @@ func IntEnv(key string) int {
 
 func StringEnv(key string) string {
 	return os.Getenv(key)
+}
+
+func StringEnvDefault(key string, fallback string) string {
+	value := os.Getenv(key)
+	if value == "" {
+		return fallback
+	}
+	return value
+}
+
+func BoolEnvDefault(key string, fallback bool) bool {
+	value := os.Getenv(key)
+	if value == "" {
+		return fallback
+	}
+
+	parsed, err := strconv.ParseBool(value)
+	if err != nil {
+		log.Fatal().Err(err).Msg("🚨 failed to convert " + key + " to bool")
+	}
+	return parsed
+}
+
+func FloatEnvDefault(key string, fallback float64) float64 {
+	value := os.Getenv(key)
+	if value == "" {
+		return fallback
+	}
+
+	parsed, err := strconv.ParseFloat(value, 64)
+	if err != nil {
+		log.Fatal().Err(err).Msg("🚨 failed to convert " + key + " to float")
+	}
+	return parsed
 }
