@@ -6,18 +6,20 @@ import (
 	"github.com/chai-rs/simple-bookstore/infrastructure/auth"
 	"github.com/chai-rs/simple-bookstore/internal/utils"
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
 )
 
 // AuthMiddleware checks if the user is authenticated.
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		err := auth.TokenValid(c.Request)
+		metadata, err := auth.ExtractTokenMetadata(c.Request)
 		if err != nil {
 			utils.ResponseErrorWithStatus(c, http.StatusUnauthorized, "user hasn't logged in yet")
 			c.Abort()
 			return
 		}
 
+		setUserContext(c, metadata.UserID)
 		c.Next()
 	}
 }
@@ -25,13 +27,6 @@ func AuthMiddleware() gin.HandlerFunc {
 // Authorize checks if the user is authorized.
 func Authorize(obj auth.AuthObject, act auth.AuthAction, enforcer auth.AuthEnforcer) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		err := auth.TokenValid(c.Request)
-		if err != nil {
-			utils.ResponseErrorWithStatus(c, http.StatusUnauthorized, "user hasn't logged in yet")
-			c.Abort()
-			return
-		}
-
 		metadata, err := auth.ExtractTokenMetadata(c.Request)
 		if err != nil {
 			utils.ResponseErrorWithStatus(c, http.StatusUnauthorized, "unauthorized")
@@ -39,6 +34,7 @@ func Authorize(obj auth.AuthObject, act auth.AuthAction, enforcer auth.AuthEnfor
 			return
 		}
 
+		setUserContext(c, metadata.UserID)
 		ok, err := enforcer.Enforce(metadata.UserID, obj, act)
 		if err != nil {
 			utils.ResponseErrorWithStatus(c, http.StatusUnauthorized, "error occurred while authorizing user")
@@ -54,4 +50,11 @@ func Authorize(obj auth.AuthObject, act auth.AuthAction, enforcer auth.AuthEnfor
 
 		c.Next()
 	}
+}
+
+func setUserContext(c *gin.Context, userID string) {
+	c.Set(UserIDKey, userID)
+
+	requestLogger := log.Ctx(c.Request.Context()).With().Str(UserIDKey, userID).Logger()
+	c.Request = c.Request.WithContext(requestLogger.WithContext(c.Request.Context()))
 }

@@ -34,23 +34,23 @@ func NewService(repo Repository, auth auth.Auth, tokenManager auth.TokenManager,
 func (s *service) Login(ctx context.Context, email string, password string) (string, string, error) {
 	user, err := s.repo.GetByEmail(ctx, email)
 	if err != nil {
-		log.Error().Err(err).Str("email", email).Msg("🚨 failed to get user by email")
+		log.Ctx(ctx).Error().Err(err).Str("email", email).Msg("🚨 failed to get user by email")
 		return "", "", err
 	}
 
 	if !crypto.ComparePassword(password, user.HashedPassword) {
-		log.Error().Str("email", email).Msg("🚨 invalid password")
+		log.Ctx(ctx).Error().Str("email", email).Msg("🚨 invalid password")
 		return "", "", fmt.Errorf("invalid password")
 	}
 
 	ts, err := s.tokenManager.CreateToken(user.ID.String(), user.Email)
 	if err != nil {
-		log.Error().Err(err).Msg("🚨 failed to create token")
+		log.Ctx(ctx).Error().Err(err).Msg("🚨 failed to create token")
 		return "", "", err
 	}
 
 	if err := s.auth.CreateAuth(ctx, user.ID.String(), ts); err != nil {
-		log.Error().Err(err).Msg("🚨 failed to create auth")
+		log.Ctx(ctx).Error().Err(err).Msg("🚨 failed to create auth")
 		return "", "", err
 	}
 
@@ -61,28 +61,28 @@ func (s *service) Register(ctx context.Context, user *model.User) (string, strin
 	user.ID = uuid.New()
 	err := s.repo.Create(ctx, user)
 	if err != nil {
-		log.Error().Err(err).Str("email", user.Email).Msg("🚨 failed to create user")
+		log.Ctx(ctx).Error().Err(err).Str("email", user.Email).Msg("🚨 failed to create user")
 		return "", "", err
 	}
 
 	if err := s.enforcer.AddPolicy(user.ID.String(), auth.Resource, auth.Read); err != nil {
-		log.Error().Err(err).Str("email", user.Email).Msg("🚨 failed to add policy")
+		log.Ctx(ctx).Error().Err(err).Str("email", user.Email).Msg("🚨 failed to add policy")
 		return "", "", err
 	}
 
 	if err := s.enforcer.AddPolicy(user.ID.String(), auth.Resource, auth.Write); err != nil {
-		log.Error().Err(err).Str("email", user.Email).Msg("🚨 failed to add policy")
+		log.Ctx(ctx).Error().Err(err).Str("email", user.Email).Msg("🚨 failed to add policy")
 		return "", "", err
 	}
 
 	ts, err := s.tokenManager.CreateToken(user.ID.String(), user.Email)
 	if err != nil {
-		log.Error().Err(err).Msg("🚨 failed to create token")
+		log.Ctx(ctx).Error().Err(err).Msg("🚨 failed to create token")
 		return "", "", err
 	}
 
 	if err := s.auth.CreateAuth(ctx, user.ID.String(), ts); err != nil {
-		log.Error().Err(err).Msg("🚨 failed to create auth")
+		log.Ctx(ctx).Error().Err(err).Msg("🚨 failed to create auth")
 		return "", "", err
 	}
 
@@ -91,12 +91,12 @@ func (s *service) Register(ctx context.Context, user *model.User) (string, strin
 
 func (s *service) Logout(ctx context.Context, metadata *auth.AccessProperties) error {
 	if err := s.auth.DeleteAccessToken(ctx, metadata); err != nil {
-		log.Error().Err(err).Msg("🚨 failed to delete access token")
+		log.Ctx(ctx).Error().Err(err).Msg("🚨 failed to delete access token")
 		return err
 	}
 
 	if err := s.auth.DeleteRefreshToken(ctx, auth.ToRefreshUUID(metadata.TokenUUID, metadata.UserID)); err != nil {
-		log.Error().Err(err).Msg("🚨 failed to delete refresh token")
+		log.Ctx(ctx).Error().Err(err).Msg("🚨 failed to delete refresh token")
 		return err
 	}
 
@@ -106,19 +106,19 @@ func (s *service) Logout(ctx context.Context, metadata *auth.AccessProperties) e
 func (s *service) RefreshToken(ctx context.Context, refreshToken string) (string, string, error) {
 	userID, err := s.auth.FetchAuth(ctx, refreshToken)
 	if err != nil {
-		log.Error().Err(err).Msg("🚨 failed to fetch auth")
+		log.Ctx(ctx).Error().Err(err).Msg("🚨 failed to fetch auth")
 		return "", "", err
 	}
 
 	user, err := s.repo.GetByID(ctx, userID)
 	if err != nil {
-		log.Error().Err(err).Msg("🚨 failed to get user by id")
+		log.Ctx(ctx).Error().Err(err).Msg("🚨 failed to get user by id")
 		return "", "", err
 	}
 
 	ts, err := s.tokenManager.CreateToken(user.ID.String(), user.Email)
 	if err != nil {
-		log.Error().Err(err).Msg("🚨 failed to create token")
+		log.Ctx(ctx).Error().Err(err).Msg("🚨 failed to create token")
 		return "", "", err
 	}
 

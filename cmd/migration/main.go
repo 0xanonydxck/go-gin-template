@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/chai-rs/simple-bookstore/config"
-	_ "github.com/chai-rs/simple-bookstore/infrastructure/logger"
+	"github.com/chai-rs/simple-bookstore/infrastructure/logger"
 	"github.com/chai-rs/simple-bookstore/pkg/migration"
 	_ "github.com/golang-migrate/migrate/v4/database/sqlite3"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -15,6 +15,11 @@ var migrator migration.DatabaseMigration
 
 func init() {
 	config.Init()
+	logger.Configure(logger.Config{
+		Level:       config.LOG_LEVEL,
+		ServiceName: config.OTEL_SERVICE_NAME,
+		Environment: config.OTEL_ENVIRONMENT,
+	})
 }
 
 func main() {

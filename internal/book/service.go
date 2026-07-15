@@ -27,7 +27,7 @@ func NewService(repo Repository) *service {
 func (s *service) Create(ctx context.Context, book *model.Book) error {
 	err := s.repo.Create(ctx, book)
 	if err != nil {
-		log.Error().Err(err).Msg("🚨 failed to create book")
+		log.Ctx(ctx).Error().Err(err).Msg("🚨 failed to create book")
 		return err
 	}
 
@@ -37,7 +37,7 @@ func (s *service) Create(ctx context.Context, book *model.Book) error {
 func (s *service) Update(ctx context.Context, book *model.Book) error {
 	err := s.repo.Update(ctx, book)
 	if err != nil {
-		log.Error().Err(err).Msg("🚨 failed to update book")
+		log.Ctx(ctx).Error().Err(err).Msg("🚨 failed to update book")
 		return err
 	}
 
@@ -47,7 +47,7 @@ func (s *service) Update(ctx context.Context, book *model.Book) error {
 func (s *service) GetAll(ctx context.Context) ([]model.Book, error) {
 	books, err := s.repo.GetAll(ctx)
 	if err != nil {
-		log.Error().Err(err).Msg("🚨 failed to get all books")
+		log.Ctx(ctx).Error().Err(err).Msg("🚨 failed to get all books")
 		return nil, err
 	}
 
@@ -57,7 +57,7 @@ func (s *service) GetAll(ctx context.Context) ([]model.Book, error) {
 func (s *service) GetByID(ctx context.Context, id uuid.UUID) (*model.Book, error) {
 	book, err := s.repo.GetByID(ctx, id)
 	if err != nil {
-		log.Error().Err(err).Msg("🚨 failed to get book by id")
+		log.Ctx(ctx).Error().Err(err).Msg("🚨 failed to get book by id")
 		return nil, err
 	}
 
@@ -67,7 +67,7 @@ func (s *service) GetByID(ctx context.Context, id uuid.UUID) (*model.Book, error
 func (s *service) Delete(ctx context.Context, id uuid.UUID) error {
 	err := s.repo.Delete(ctx, id)
 	if err != nil {
-		log.Error().Err(err).Msg("🚨 failed to delete book")
+		log.Ctx(ctx).Error().Err(err).Msg("🚨 failed to delete book")
 		return err
 	}
 
